@@ -254,7 +254,28 @@ export class ProxyServer {
       })
     }
 
+    const formatSwitchReason = (classified) => {
+      switch (classified?.type) {
+        case 'QUOTA_EXHAUSTED':
+          return 'quota'
+        case 'RATE_LIMITED':
+          return '429'
+        case 'MODEL_NOT_FOUND':
+          return '404'
+        case 'MODEL_CAPACITY':
+          return 'capacity'
+        case 'SERVER_ERROR':
+          return '5xx'
+        case 'NETWORK_ERROR':
+          return 'network'
+        default:
+          return 'retry'
+      }
+    }
+
     // 5. Retry loop
+    let pendingSwitchReason = null
+    let previousAccount = null
     for (let attempt = 0; attempt < this._retries; attempt++) {
       // First attempt: respect sticky session.
       // Subsequent retries: fresh P2C (don't hammer the same failed account).
@@ -264,7 +285,13 @@ export class ProxyServer {
       const account = this._accountManager.selectAccount(selectOpts)
       if (!account) break // No available accounts → fall through to 503
 
-      const result = await this._forwardRequest(account, body, clientRes)
+      const result = await this._forwardRequest(account, body, clientRes, {
+        requestedModel,
+        switched: attempt > 0,
+        switchReason: pendingSwitchReason,
+        switchedFromProviderKey: previousAccount?.providerKey,
+        switchedFromModelId: previousAccount?.modelId,
+      })
 
       // Response fully sent (success JSON or SSE pipe established)
       if (result.done) return
@@ -292,6 +319,8 @@ export class ProxyServer {
         )
       }
       // shouldRetry === true → next attempt
+      pendingSwitchReason = formatSwitchReason(classified)
+      previousAccount = account
     }
 
     // All retries consumed, or no accounts available from the start
@@ -314,9 +343,10 @@ export class ProxyServer {
    * @param {{ id: string, apiKey: string, modelId: string, url: string }} account
    * @param {object} body
    * @param {http.ServerResponse} clientRes
+   * @param {{ requestedModel?: string, switched?: boolean, switchReason?: string|null, switchedFromProviderKey?: string, switchedFromModelId?: string }} [logContext]
    * @returns {Promise<{ done: boolean }>}
    */
-  _forwardRequest(account, body, clientRes) {
+  _forwardRequest(account, body, clientRes, logContext = {}) {
     return new Promise(resolve => {
       // Replace client-supplied model name with the account's model ID
       const newBody = { ...body, model: account.modelId }
@@ -392,6 +422,11 @@ export class ProxyServer {
                 completionTokens,
                 latencyMs: Date.now() - startTime,
                 success: true,
+                requestedModelId: logContext.requestedModel,
+                switched: logContext.switched === true,
+                switchReason: logContext.switchReason,
+                switchedFromProviderKey: logContext.switchedFromProviderKey,
+                switchedFromModelId: logContext.switchedFromModelId,
               })
               this._accountManager.recordSuccess(account.id, Date.now() - startTime)
               const quotaUpdated = this._accountManager.updateQuota(account.id, headers)
@@ -445,6 +480,11 @@ export class ProxyServer {
                 completionTokens,
                 latencyMs,
                 success: true,
+                requestedModelId: logContext.requestedModel,
+                switched: logContext.switched === true,
+                switchReason: logContext.switchReason,
+                switchedFromProviderKey: logContext.switchedFromProviderKey,
+                switchedFromModelId: logContext.switchedFromModelId,
               })
 
               // Forward stripped response to client
@@ -474,6 +514,11 @@ export class ProxyServer {
               completionTokens: 0,
               latencyMs,
               success: false,
+              requestedModelId: logContext.requestedModel,
+              switched: logContext.switched === true,
+              switchReason: logContext.switchReason,
+              switchedFromProviderKey: logContext.switchedFromProviderKey,
+              switchedFromModelId: logContext.switchedFromModelId,
             })
             resolve({
               done: false,
@@ -499,6 +544,11 @@ export class ProxyServer {
           completionTokens: 0,
           latencyMs,
           success: false,
+          requestedModelId: logContext.requestedModel,
+          switched: logContext.switched === true,
+          switchReason: logContext.switchReason,
+          switchedFromProviderKey: logContext.switchedFromProviderKey,
+          switchedFromModelId: logContext.switchedFromModelId,
         })
         // TCP / DNS / timeout errors
         resolve({

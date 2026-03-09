@@ -100,7 +100,7 @@ export class TokenStats {
   /**
    * Record a single request's token usage.
    *
-   * @param {{ accountId: string, modelId: string, providerKey?: string, statusCode?: number|string, requestType?: string, promptTokens?: number, completionTokens?: number, latencyMs?: number, success?: boolean }} entry
+   * @param {{ accountId: string, modelId: string, providerKey?: string, statusCode?: number|string, requestType?: string, promptTokens?: number, completionTokens?: number, latencyMs?: number, success?: boolean, requestedModelId?: string, switched?: boolean, switchReason?: string, switchedFromProviderKey?: string, switchedFromModelId?: string }} entry
    */
   record(entry) {
     const {
@@ -113,6 +113,11 @@ export class TokenStats {
       completionTokens = 0,
       latencyMs = 0,
       success = true,
+      requestedModelId,
+      switched = false,
+      switchReason,
+      switchedFromProviderKey,
+      switchedFromModelId,
     } = entry
     const totalTokens = promptTokens + completionTokens
     const now = new Date()
@@ -157,6 +162,11 @@ export class TokenStats {
         completionTokens,
         latencyMs,
         success,
+        ...(typeof requestedModelId === 'string' && requestedModelId.length > 0 && { requestedModelId }),
+        ...(switched === true && { switched: true }),
+        ...(typeof switchReason === 'string' && switchReason.length > 0 && { switchReason }),
+        ...(typeof switchedFromProviderKey === 'string' && switchedFromProviderKey.length > 0 && { switchedFromProviderKey }),
+        ...(typeof switchedFromModelId === 'string' && switchedFromModelId.length > 0 && { switchedFromModelId }),
       }
       appendFileSync(this._logFile, JSON.stringify(logEntry) + '\n')
     } catch { /* ignore */ }

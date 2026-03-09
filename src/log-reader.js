@@ -18,10 +18,13 @@
  *     time:     string   // ISO timestamp string  (from entry.timestamp)
  *     requestType: string // e.g. "chat.completions"
  *     model:    string   // e.g. "llama-3.3-70b-instruct"
+ *     requestedModel: string // public proxy model originally requested by the client
  *     provider: string   // e.g. "nvidia"
  *     status:   string   // e.g. "200" | "429" | "error"
  *     tokens:   number   // promptTokens + completionTokens (0 if unknown)
  *     latency:  number   // ms (0 if unknown)
+ *     switched: boolean  // true when the router retried on a fallback provider/model
+ *     switchReason: string|null // short reason label shown in the log UI
  *   }
  *
  * @exports loadRecentLogs
@@ -88,7 +91,7 @@ function inferRequestType(entry) {
  * the required `timestamp` field.
  *
  * @param {string} line - A single text line from the JSONL file.
- * @returns {{ time: string, requestType: string, model: string, provider: string, status: string, tokens: number, latency: number } | null}
+ * @returns {{ time: string, requestType: string, model: string, requestedModel: string, provider: string, status: string, tokens: number, latency: number, switched: boolean, switchReason: string|null, switchedFromProvider: string|null, switchedFromModel: string|null } | null}
  */
 export function parseLogLine(line) {
   const trimmed = line.trim()
@@ -106,21 +109,39 @@ export function parseLogLine(line) {
   if (!normalizedTime) return null
 
   const model    = String(entry.modelId    ?? entry.model    ?? 'unknown')
+  const requestedModel = typeof entry.requestedModelId === 'string'
+    ? entry.requestedModelId
+    : (typeof entry.requestedModel === 'string' ? entry.requestedModel : '')
   const provider = inferProvider(entry)
   const status   = inferStatus(entry)
   const requestType = inferRequestType(entry)
   const tokens   = (Number(entry.usage?.prompt_tokens ?? entry.promptTokens ?? 0) +
                     Number(entry.usage?.completion_tokens ?? entry.completionTokens ?? 0)) || 0
   const latency  = Number(entry.latencyMs ?? entry.latency ?? 0) || 0
+  const switched = entry.switched === true
+  const switchReason = typeof entry.switchReason === 'string' && entry.switchReason.trim().length > 0
+    ? entry.switchReason.trim()
+    : null
+  const switchedFromProvider = typeof entry.switchedFromProviderKey === 'string' && entry.switchedFromProviderKey.trim().length > 0
+    ? entry.switchedFromProviderKey.trim()
+    : null
+  const switchedFromModel = typeof entry.switchedFromModelId === 'string' && entry.switchedFromModelId.trim().length > 0
+    ? entry.switchedFromModelId.trim()
+    : null
 
   return {
     time: normalizedTime,
     requestType,
     model,
+    requestedModel,
     provider,
     status,
     tokens,
     latency,
+    switched,
+    switchReason,
+    switchedFromProvider,
+    switchedFromModel,
   }
 }
 
@@ -133,7 +154,7 @@ export function parseLogLine(line) {
  * @param {object}  [opts]
  * @param {string}  [opts.logFile]  - Path to request-log.jsonl (injectable for tests)
  * @param {number}  [opts.limit]    - Maximum rows to return (default 200)
- * @returns {Array<{ time: string, requestType: string, model: string, provider: string, status: string, tokens: number, latency: number }>}
+ * @returns {Array<{ time: string, requestType: string, model: string, requestedModel: string, provider: string, status: string, tokens: number, latency: number, switched: boolean, switchReason: string|null, switchedFromProvider: string|null, switchedFromModel: string|null }>}
  */
 export function loadRecentLogs({ logFile = DEFAULT_LOG_FILE, limit = 200 } = {}) {
   try {

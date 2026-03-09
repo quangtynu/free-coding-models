@@ -35,7 +35,7 @@ import { createRequire } from 'module'
 import { sources } from '../sources.js'
 import { PING_INTERVAL, FRAMES } from './constants.js'
 import { TIER_COLOR } from './tier-colors.js'
-import { getAvg, getVerdict, getUptime, getStabilityScore } from './utils.js'
+import { getAvg, getVerdict, getUptime, getStabilityScore, getVersionStatusInfo } from './utils.js'
 import { usagePlaceholderForProvider } from './ping.js'
 import { formatTokenTotalCompact } from './token-usage-reader.js'
 import { calculateViewport, sortResultsWithPinnedFavorites, renderProxyStatusLine, padEndDisplay } from './render-helpers.js'
@@ -89,7 +89,7 @@ export function setActiveProxy(proxyInstance) {
 }
 
 // ─── renderTable: mode param controls footer hint text (opencode vs openclaw) ─────────
-export function renderTable(results, pendingPings, frame, cursor = null, sortColumn = 'avg', sortDirection = 'asc', pingInterval = PING_INTERVAL, lastPingTime = Date.now(), mode = 'opencode', tierFilterMode = 0, scrollOffset = 0, terminalRows = 0, terminalCols = 0, originFilterMode = 0, activeProfile = null, profileSaveMode = false, profileSaveBuffer = '', proxyStartupStatus = null, pingMode = 'normal', pingModeSource = 'auto', hideUnconfiguredModels = false, widthWarningStartedAt = null, widthWarningDismissed = false) {
+export function renderTable(results, pendingPings, frame, cursor = null, sortColumn = 'avg', sortDirection = 'asc', pingInterval = PING_INTERVAL, lastPingTime = Date.now(), mode = 'opencode', tierFilterMode = 0, scrollOffset = 0, terminalRows = 0, terminalCols = 0, originFilterMode = 0, activeProfile = null, profileSaveMode = false, profileSaveBuffer = '', proxyStartupStatus = null, pingMode = 'normal', pingModeSource = 'auto', hideUnconfiguredModels = false, widthWarningStartedAt = null, widthWarningDismissed = false, settingsUpdateState = 'idle', settingsUpdateLatestVersion = null, proxyEnabled = false) {
   // 📖 Filter out hidden models for display
   const visibleResults = results.filter(r => !r.hidden)
 
@@ -137,6 +137,7 @@ export function renderTable(results, pendingPings, frame, cursor = null, sortCol
     : chalk.bold.rgb(0, 200, 255)
   const modeBadge = toolBadgeColor(' [ ') + chalk.yellow.bold('Z') + toolBadgeColor(` Tool : ${toolMeta.label} ]`)
   const activeHeaderBadge = (text, bg = [57, 255, 20], fg = [0, 0, 0]) => chalk.bgRgb(...bg).rgb(...fg).bold(` ${text} `)
+  const versionStatus = getVersionStatusInfo(settingsUpdateState, settingsUpdateLatestVersion)
 
   // 📖 Tier filter badge shown when filtering is active (shows exact tier name)
   const TIER_CYCLE_NAMES = [null, 'S+', 'S', 'A+', 'A', 'A-', 'B+', 'B', 'C']
@@ -637,7 +638,12 @@ export function renderTable(results, pendingPings, frame, cursor = null, sortCol
   // 📖 Line 2: profiles, recommend, feature request, bug report, and extended hints — gives visibility to less-obvious features
   lines.push(chalk.dim(`  `) + hotkey('⇧P', ' Cycle profile') + chalk.dim(`  •  `) + hotkey('⇧S', ' Save profile') + chalk.dim(`  •  `) + hotkey('Q', ' Smart Recommend') + chalk.dim(`  •  `) + hotkey('J', ' Request feature') + chalk.dim(`  •  `) + hotkey('I', ' Report bug'))
   // 📖 Proxy status line — always rendered with explicit state (starting/running/failed/stopped)
-  lines.push(renderProxyStatusLine(proxyStartupStatus, activeProxyRef))
+  lines.push(renderProxyStatusLine(proxyStartupStatus, activeProxyRef, proxyEnabled))
+  if (versionStatus.isOutdated) {
+    const outdatedBadge = chalk.bgRed.bold.yellow(' This version is outdated . ')
+    const latestLabel = chalk.redBright(` local v${LOCAL_VERSION} · latest v${versionStatus.latestVersion}`)
+    lines.push(`  ${outdatedBadge}${latestLabel}`)
+  }
   lines.push(
     chalk.rgb(255, 150, 200)('  Made with 💖 & ☕ by \x1b]8;;https://github.com/vava-nessa\x1b\\vava-nessa\x1b]8;;\x1b\\') +
     chalk.dim('  •  ') +

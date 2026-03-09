@@ -413,7 +413,8 @@ export function createOverlayRenderers(state, deps) {
       // 📖 Column widths for the log table
       const W_TIME    = 19
       const W_PROV    = 14
-      const W_MODEL   = 36
+      const W_MODEL   = 44
+      const W_ROUTE   = 18
       const W_STATUS  = 8
       const W_TOKENS  = 12
       const W_LAT     = 10
@@ -422,11 +423,12 @@ export function createOverlayRenderers(state, deps) {
       const hTime   = chalk.dim('Time'.padEnd(W_TIME))
       const hProv   = chalk.dim('Provider'.padEnd(W_PROV))
       const hModel  = chalk.dim('Model'.padEnd(W_MODEL))
+      const hRoute  = chalk.dim('Route'.padEnd(W_ROUTE))
       const hStatus = chalk.dim('Status'.padEnd(W_STATUS))
       const hTok    = chalk.dim('Tokens Used'.padEnd(W_TOKENS))
       const hLat    = chalk.dim('Latency'.padEnd(W_LAT))
-      lines.push(`  ${hTime}  ${hProv}  ${hModel}  ${hStatus}  ${hTok}  ${hLat}`)
-      lines.push(chalk.dim('  ' + '─'.repeat(W_TIME + W_PROV + W_MODEL + W_STATUS + W_TOKENS + W_LAT + 10)))
+      lines.push(`  ${hTime}  ${hProv}  ${hModel}  ${hRoute}  ${hStatus}  ${hTok}  ${hLat}`)
+      lines.push(chalk.dim('  ' + '─'.repeat(W_TIME + W_PROV + W_MODEL + W_ROUTE + W_STATUS + W_TOKENS + W_LAT + 12)))
 
       for (const row of logRows) {
         // 📖 Format time as HH:MM:SS (strip the date part for compactness)
@@ -437,6 +439,11 @@ export function createOverlayRenderers(state, deps) {
             timeStr = d.toISOString().replace('T', ' ').slice(0, 19)
           }
         } catch { /* keep raw */ }
+
+        const requestedModelLabel = row.requestedModel || ''
+        const displayModel = row.switched && requestedModelLabel && requestedModelLabel !== row.model
+          ? `${requestedModelLabel} → ${row.model}`
+          : row.model
 
         // 📖 Color-code status
         let statusCell
@@ -453,14 +460,22 @@ export function createOverlayRenderers(state, deps) {
 
         const tokStr = formatLogTokens(row.tokens)
         const latStr = row.latency > 0 ? `${row.latency}ms` : '--'
+        const routeLabel = row.switched
+          ? `SWITCHED ↻ ${row.switchReason || 'fallback'}`
+          : 'direct'
 
         const timeCell  = chalk.dim(timeStr.slice(0, W_TIME).padEnd(W_TIME))
         const provCell  = chalk.cyan(row.provider.slice(0, W_PROV).padEnd(W_PROV))
-        const modelCell = chalk.white(row.model.slice(0, W_MODEL).padEnd(W_MODEL))
+        const modelCell = row.switched
+          ? chalk.bold.rgb(255, 210, 90)(displayModel.slice(0, W_MODEL).padEnd(W_MODEL))
+          : chalk.white(displayModel.slice(0, W_MODEL).padEnd(W_MODEL))
+        const routeCell = row.switched
+          ? chalk.bgRgb(120, 25, 25).yellow.bold(` ${routeLabel.slice(0, W_ROUTE - 2).padEnd(W_ROUTE - 2)} `)
+          : chalk.dim(routeLabel.padEnd(W_ROUTE))
         const tokCell   = chalk.dim(tokStr.padEnd(W_TOKENS))
         const latCell   = chalk.dim(latStr.padEnd(W_LAT))
 
-        lines.push(`  ${timeCell}  ${provCell}  ${modelCell}  ${statusCell}  ${tokCell}  ${latCell}`)
+        lines.push(`  ${timeCell}  ${provCell}  ${modelCell}  ${routeCell}  ${statusCell}  ${tokCell}  ${latCell}`)
       }
     }
 

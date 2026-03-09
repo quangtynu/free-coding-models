@@ -43,6 +43,10 @@ import {
 import { buildProviderModelTokenKey, loadTokenUsageByProviderModel, formatTokenTotalCompact } from '../src/token-usage-reader.js'
 import { renderTable } from '../src/render-table.js'
 import { buildProviderModelsUrl, parseProviderModelIds, listProviderTestModels, classifyProviderTestOutcome } from '../src/key-handler.js'
+import { buildMergedModels } from '../src/model-merger.js'
+import { setOpenCodeModelData } from '../src/opencode.js'
+import { resolveLauncherModelId } from '../src/tool-launchers.js'
+import { parseLogLine } from '../src/log-reader.js'
 
 // ─── Helper: create a mock model result ──────────────────────────────────────
 // 📖 Builds a minimal result object matching the shape used by the main script
@@ -1308,6 +1312,11 @@ describe('config profile functions', () => {
       preferredPort: 8123,
     })
   })
+
+  it('defaults configured-only mode and preferred tool mode in profile settings', () => {
+    assert.equal(_emptyProfileSettings().hideUnconfiguredModels, true)
+    assert.equal(_emptyProfileSettings().preferredToolMode, 'opencode')
+  })
 })
 
 // ─── formatCtxWindow ─────────────────────────────────────────────────────────
@@ -1404,6 +1413,59 @@ describe('token-usage-reader', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
+  })
+})
+
+describe('request log parsing', () => {
+  it('parses proxy switch metadata for fallback rows', () => {
+    const row = parseLogLine(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      providerKey: 'groq',
+      modelId: 'openai/gpt-oss-120b',
+      requestedModelId: 'deepseek-v3-1',
+      switched: true,
+      switchReason: '429',
+      switchedFromProviderKey: 'nvidia',
+      switchedFromModelId: 'deepseek-ai/deepseek-v3.1',
+      statusCode: 200,
+      promptTokens: 120,
+      completionTokens: 30,
+      latencyMs: 456,
+    }))
+
+    assert.ok(row)
+    assert.equal(row.requestedModel, 'deepseek-v3-1')
+    assert.equal(row.model, 'openai/gpt-oss-120b')
+    assert.equal(row.switched, true)
+    assert.equal(row.switchReason, '429')
+    assert.equal(row.switchedFromProvider, 'nvidia')
+    assert.equal(row.switchedFromModel, 'deepseek-ai/deepseek-v3.1')
+  })
+})
+
+describe('proxy launcher model ids', () => {
+  it('uses the merged proxy slug for proxy-backed launcher flows', () => {
+    const mergedModels = buildMergedModels(MODELS)
+    const mergedModelByLabel = new Map(mergedModels.map(model => [model.label, model]))
+    setOpenCodeModelData(mergedModels, mergedModelByLabel)
+
+    const resolved = resolveLauncherModelId({
+      modelId: 'openai/gpt-oss-120b',
+      label: 'GPT OSS 120B',
+      providerKey: 'nvidia',
+    }, true)
+
+    assert.equal(resolved, 'gpt-oss-120b')
+  })
+
+  it('keeps the provider-specific model id when proxy is disabled', () => {
+    const resolved = resolveLauncherModelId({
+      modelId: 'deepseek-ai/deepseek-v3.1',
+      label: 'DeepSeek V3.1',
+      providerKey: 'nvidia',
+    }, false)
+
+    assert.equal(resolved, 'deepseek-ai/deepseek-v3.1')
   })
 })
 

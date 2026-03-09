@@ -16,9 +16,10 @@
  *   fully official. The user still gets a reproducible env/config handoff.
  *
  * @functions
+ *   → `resolveLauncherModelId` — choose the provider-specific id or proxy slug for a launch
  *   → `startExternalTool` — configure and launch the selected external tool mode
  *
- * @exports startExternalTool
+ * @exports resolveLauncherModelId, startExternalTool
  *
  * @see src/tool-metadata.js
  * @see src/provider-metadata.js
@@ -34,7 +35,7 @@ import { sources } from '../sources.js'
 import { getApiKey, getProxySettings } from './config.js'
 import { ENV_VAR_NAMES, isWindows } from './provider-metadata.js'
 import { getToolMeta } from './tool-metadata.js'
-import { ensureProxyRunning } from './opencode.js'
+import { ensureProxyRunning, resolveProxyModelId } from './opencode.js'
 
 function ensureDir(filePath) {
   const dir = dirname(filePath)
@@ -69,6 +70,31 @@ function getProviderBaseUrl(providerKey) {
     .replace(/\/chat\/completions$/i, '')
     .replace(/\/responses$/i, '')
     .replace(/\/predictions$/i, '')
+}
+
+function applyOpenAiCompatEnv(env, apiKey, baseUrl, modelId) {
+  if (!apiKey || !baseUrl || !modelId) return env
+  env.OPENAI_API_KEY = apiKey
+  env.OPENAI_BASE_URL = baseUrl
+  env.OPENAI_API_BASE = baseUrl
+  env.OPENAI_MODEL = modelId
+  env.LLM_API_KEY = apiKey
+  env.LLM_BASE_URL = baseUrl
+  env.LLM_MODEL = `openai/${modelId}`
+  return env
+}
+
+/**
+ * 📖 resolveLauncherModelId keeps proxy-backed launches on the universal
+ * 📖 `fcm-proxy` catalog slug instead of leaking a provider-specific upstream id.
+ *
+ * @param {{ label?: string, modelId?: string }} model
+ * @param {boolean} useProxy
+ * @returns {string}
+ */
+export function resolveLauncherModelId(model, useProxy = false) {
+  if (useProxy) return resolveProxyModelId(model)
+  return model?.modelId ?? ''
 }
 
 function buildToolEnv(mode, model, config) {
@@ -233,6 +259,7 @@ function printConfigResult(toolName, result) {
 export async function startExternalTool(mode, model, config) {
   const meta = getToolMeta(mode)
   const { env, apiKey, baseUrl } = buildToolEnv(mode, model, config)
+  const proxySettings = getProxySettings(config)
 
   if (!apiKey && mode !== 'amp') {
     console.log(chalk.yellow(`  ⚠ No API key configured for ${model.providerKey}.`))
@@ -252,27 +279,43 @@ export async function startExternalTool(mode, model, config) {
     let crushApiKey = apiKey
     let crushBaseUrl = baseUrl
     let providerId = 'freeCodingModels'
-    const proxySettings = getProxySettings(config)
+    let launchModelId = resolveLauncherModelId(model, false)
 
     if (proxySettings.enabled) {
       const started = await ensureProxyRunning(config)
       crushApiKey = started.proxyToken
       crushBaseUrl = `http://127.0.0.1:${started.port}/v1`
       providerId = 'freeCodingModelsProxy'
+      launchModelId = resolveLauncherModelId(model, true)
       console.log(chalk.dim(`  📖 Crush will use the local FCM proxy on :${started.port} for this launch.`))
     } else {
       console.log(chalk.dim('  📖 Crush will use the provider directly for this launch.'))
     }
 
-    printConfigResult(meta.label, writeCrushConfig(model, crushApiKey, crushBaseUrl, providerId))
+    const launchModel = { ...model, modelId: launchModelId }
+    applyOpenAiCompatEnv(env, crushApiKey, crushBaseUrl, launchModelId)
+    printConfigResult(meta.label, writeCrushConfig(launchModel, crushApiKey, crushBaseUrl, providerId))
     return spawnCommand('crush', [], env)
   }
 
   if (mode === 'goose') {
-    env.OPENAI_HOST = baseUrl
+    let gooseBaseUrl = baseUrl
+    let gooseApiKey = apiKey
+    let gooseModelId = resolveLauncherModelId(model, false)
+
+    if (proxySettings.enabled) {
+      const started = await ensureProxyRunning(config)
+      gooseApiKey = started.proxyToken
+      gooseBaseUrl = `http://127.0.0.1:${started.port}/v1`
+      gooseModelId = resolveLauncherModelId(model, true)
+      applyOpenAiCompatEnv(env, gooseApiKey, gooseBaseUrl, gooseModelId)
+      console.log(chalk.dim(`  📖 Goose will use the local FCM proxy on :${started.port} for this launch.`))
+    }
+
+    env.OPENAI_HOST = gooseBaseUrl
     env.OPENAI_BASE_PATH = 'v1/chat/completions'
-    env.OPENAI_MODEL = model.modelId
-    console.log(chalk.dim('  📖 Goose uses env-based OpenAI-compatible configuration for this launch.'))
+    env.OPENAI_MODEL = gooseModelId
+    console.log(chalk.dim(`  📖 Goose uses env-based OpenAI-compatible configuration for ${proxySettings.enabled ? 'the proxy' : 'this provider'} launch.`))
     return spawnCommand('goose', [], env)
   }
 

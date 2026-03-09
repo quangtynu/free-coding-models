@@ -71,7 +71,7 @@
  *   - apiKeys: API keys per provider (can differ between work/personal setups)
  *   - providers: enabled/disabled state per provider
  *   - favorites: list of pinned favorite models
- *   - settings: extra TUI preferences (tierFilter, sortColumn, sortAsc, pingInterval, hideUnconfiguredModels, proxy)
+ *   - settings: extra TUI preferences (tierFilter, sortColumn, sortAsc, pingInterval, hideUnconfiguredModels, preferredToolMode, proxy)
  *
  * 📖 When a profile is loaded via --profile <name> or Shift+P, the main config's
  *    apiKeys/providers/favorites are replaced with the profile's values. The profile
@@ -395,7 +395,7 @@ export function isProviderEnabled(config, providerKey) {
  * 📖 These settings are saved/restored when switching profiles so each profile
  *    can have different sort, filter, and ping preferences.
  *
- * @returns {{ tierFilter: string|null, sortColumn: string, sortAsc: boolean, pingInterval: number, hideUnconfiguredModels: boolean }}
+ * @returns {{ tierFilter: string|null, sortColumn: string, sortAsc: boolean, pingInterval: number, hideUnconfiguredModels: boolean, preferredToolMode: string }}
  */
 export function _emptyProfileSettings() {
   return {
@@ -404,6 +404,7 @@ export function _emptyProfileSettings() {
     sortAsc: true,        // 📖 true = ascending (fastest first for latency)
     pingInterval: 10000,  // 📖 default ms between pings in the steady "normal" mode
     hideUnconfiguredModels: true, // 📖 true = default to providers that are actually configured
+    preferredToolMode: 'opencode', // 📖 remember the last Z-selected launcher across app restarts
     proxy: normalizeProxySettings(),
   }
 }

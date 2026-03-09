@@ -656,15 +656,17 @@ export function getTopRecommendations(results, taskType, priority, contextBudget
  *   2. proxyStartupStatus.phase === 'running'  → state:'running' with port/accountCount
  *   3. proxyStartupStatus.phase === 'failed'   → state:'failed' with truncated reason
  *   4. isProxyActive (legacy activeProxy flag)  → state:'running' (no port detail)
- *   5. otherwise                               → state:'stopped'
+ *   5. isProxyEnabled                           → state:'configured'
+ *   6. otherwise                               → state:'stopped'
  *
  * 📖 Reason is clamped to 80 characters to keep footer readable (no stack traces).
  *
  * @param {object|null} proxyStartupStatus — state.proxyStartupStatus value
  * @param {boolean} isProxyActive — truthy when the module-level activeProxy is non-null
+ * @param {boolean} [isProxyEnabled=false] — truthy when proxy mode is enabled in settings
  * @returns {{ state: string, port?: number, accountCount?: number, reason?: string }}
  */
-export function getProxyStatusInfo(proxyStartupStatus, isProxyActive) {
+export function getProxyStatusInfo(proxyStartupStatus, isProxyActive, isProxyEnabled = false) {
   const MAX_REASON = 80
 
   if (proxyStartupStatus) {
@@ -693,5 +695,34 @@ export function getProxyStatusInfo(proxyStartupStatus, isProxyActive) {
     return { state: 'running' }
   }
 
+  if (isProxyEnabled) {
+    return { state: 'configured' }
+  }
+
   return { state: 'stopped' }
+}
+
+/**
+ * 📖 getVersionStatusInfo turns the settings update-check state into a compact,
+ * 📖 render-friendly footer descriptor for the main table.
+ *
+ * 📖 Only an explicit `available` state should mark the local install as outdated.
+ * 📖 This avoids showing a scary warning before the user has actually checked npm.
+ *
+ * @param {'idle'|'checking'|'available'|'up-to-date'|'error'|'installing'} updateState
+ * @param {string|null} latestVersion
+ * @returns {{ isOutdated: boolean, latestVersion: string|null }}
+ */
+export function getVersionStatusInfo(updateState, latestVersion) {
+  if (updateState === 'available' && typeof latestVersion === 'string' && latestVersion.trim()) {
+    return {
+      isOutdated: true,
+      latestVersion: latestVersion.trim(),
+    }
+  }
+
+  return {
+    isOutdated: false,
+    latestVersion: null,
+  }
 }

@@ -66,6 +66,19 @@ export function setOpenCodeModelData(mergedModels, mergedModelByLabel) {
   mergedModelByLabelRef = mergedModelByLabel instanceof Map ? mergedModelByLabel : new Map()
 }
 
+/**
+ * 📖 resolveProxyModelId maps a selected provider-specific model to the shared
+ * 📖 proxy catalog slug used by `fcm-proxy`. The proxy exposes merged slugs, not
+ * 📖 upstream provider ids, so every launcher that targets the proxy must use this.
+ *
+ * @param {{ label?: string, modelId?: string }} model
+ * @returns {string}
+ */
+export function resolveProxyModelId(model) {
+  const merged = mergedModelByLabelRef.get(model?.label)
+  return merged?.slug ?? model?.modelId ?? ''
+}
+
 // 📖 isTcpPortAvailable: checks if a local TCP port is free for OpenCode.
 // 📖 Used to avoid tmux sub-agent port conflicts when multiple projects run in parallel.
 function isTcpPortAvailable(port) {
@@ -648,8 +661,7 @@ export async function autoStartProxyIfSynced(fcmConfig, state) {
 export async function startProxyAndLaunch(model, fcmConfig) {
   try {
     const started = await ensureProxyRunning(fcmConfig, { forceRestart: true })
-    const merged = mergedModelByLabelRef.get(model.label)
-    const defaultProxyModelId = merged?.slug ?? model.modelId
+    const defaultProxyModelId = resolveProxyModelId(model)
 
     if (!started.proxyModels || Object.keys(started.proxyModels).length === 0) {
       throw new Error('Proxy model catalog is empty')

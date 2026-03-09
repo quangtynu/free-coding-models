@@ -216,9 +216,11 @@ async function main() {
   // 📖 Backward-compat: keep apiKey var for startOpenClaw() which still needs it
   let apiKey = getApiKey(config, 'nvidia')
 
-  // 📖 Default mode: OpenCode CLI.
-  // 📖 Additional external tools can now be selected via dedicated flags.
-  let mode = 'opencode'
+  // 📖 Default mode: use the last persisted launcher choice when valid,
+  // 📖 otherwise fall back to OpenCode CLI.
+  let mode = getToolModeOrder().includes(config.settings?.preferredToolMode)
+    ? config.settings.preferredToolMode
+    : 'opencode'
   const requestedMode = getToolModeOrder().find((toolMode) => {
     const flagByMode = {
       opencode: cliArgs.openCodeMode,
@@ -703,7 +705,7 @@ async function main() {
                 ? overlays.renderHelp()
               : state.logVisible
                 ? overlays.renderLog()
-                : renderTable(state.results, state.pendingPings, state.frame, state.cursor, state.sortColumn, state.sortDirection, state.pingInterval, state.lastPingTime, state.mode, state.tierFilterMode, state.scrollOffset, state.terminalRows, state.terminalCols, state.originFilterMode, state.activeProfile, state.profileSaveMode, state.profileSaveBuffer, state.proxyStartupStatus, state.pingMode, state.pingModeSource, state.hideUnconfiguredModels, state.widthWarningStartedAt, state.widthWarningDismissed)
+                : renderTable(state.results, state.pendingPings, state.frame, state.cursor, state.sortColumn, state.sortDirection, state.pingInterval, state.lastPingTime, state.mode, state.tierFilterMode, state.scrollOffset, state.terminalRows, state.terminalCols, state.originFilterMode, state.activeProfile, state.profileSaveMode, state.profileSaveBuffer, state.proxyStartupStatus, state.pingMode, state.pingModeSource, state.hideUnconfiguredModels, state.widthWarningStartedAt, state.widthWarningDismissed, state.settingsUpdateState, state.settingsUpdateLatestVersion, getProxySettings(state.config).enabled === true)
     process.stdout.write(ALT_HOME + content)
   }, Math.round(1000 / FPS))
 
@@ -711,7 +713,7 @@ async function main() {
   const initialVisible = state.results.filter(r => !r.hidden)
   state.visibleSorted = sortResultsWithPinnedFavorites(initialVisible, state.sortColumn, state.sortDirection)
 
-  process.stdout.write(ALT_HOME + renderTable(state.results, state.pendingPings, state.frame, state.cursor, state.sortColumn, state.sortDirection, state.pingInterval, state.lastPingTime, state.mode, state.tierFilterMode, state.scrollOffset, state.terminalRows, state.terminalCols, state.originFilterMode, state.activeProfile, state.profileSaveMode, state.profileSaveBuffer, state.proxyStartupStatus, state.pingMode, state.pingModeSource, state.hideUnconfiguredModels, state.widthWarningStartedAt, state.widthWarningDismissed))
+  process.stdout.write(ALT_HOME + renderTable(state.results, state.pendingPings, state.frame, state.cursor, state.sortColumn, state.sortDirection, state.pingInterval, state.lastPingTime, state.mode, state.tierFilterMode, state.scrollOffset, state.terminalRows, state.terminalCols, state.originFilterMode, state.activeProfile, state.profileSaveMode, state.profileSaveBuffer, state.proxyStartupStatus, state.pingMode, state.pingModeSource, state.hideUnconfiguredModels, state.widthWarningStartedAt, state.widthWarningDismissed, state.settingsUpdateState, state.settingsUpdateLatestVersion, getProxySettings(state.config).enabled === true))
 
   // 📖 If --recommend was passed, auto-open the Smart Recommend overlay on start
   if (cliArgs.recommendMode) {

@@ -16,7 +16,8 @@
 
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { sortResults, getProxyStatusInfo } from '../src/utils.js'
+import { sortResults, getProxyStatusInfo, getVersionStatusInfo } from '../src/utils.js'
+import { renderProxyStatusLine } from '../src/render-helpers.js'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -357,5 +358,40 @@ describe('tui-hotkeys – proxy status indicator (getProxyStatusInfo)', () => {
   it('returns "stopped" for unrecognized phase', () => {
     const info = getProxyStatusInfo({ phase: 'unknown' }, false)
     assert.strictEqual(info.state, 'stopped')
+  })
+})
+
+describe('tui-hotkeys – proxy footer rendering', () => {
+  it('shows proxy as running when a live proxy instance exists without startup status', () => {
+    const line = renderProxyStatusLine(null, {
+      getStatus() {
+        return { running: true, port: 4321, accountCount: 2 }
+      },
+    })
+
+    assert.match(line, /Proxy/)
+    assert.match(line, /running/)
+    assert.match(line, /4321/)
+  })
+
+  it('shows proxy as configured when settings enable it but it is not running yet', () => {
+    const line = renderProxyStatusLine(null, null, true)
+
+    assert.match(line, /Proxy configured/)
+    assert.match(line, /OpenCode rotation/)
+  })
+})
+
+describe('tui-hotkeys – version status indicator', () => {
+  it('marks the install as outdated only when a newer version is explicitly available', () => {
+    const info = getVersionStatusInfo('available', '0.2.1')
+    assert.equal(info.isOutdated, true)
+    assert.equal(info.latestVersion, '0.2.1')
+  })
+
+  it('stays quiet when no update has been found', () => {
+    const info = getVersionStatusInfo('idle', null)
+    assert.equal(info.isOutdated, false)
+    assert.equal(info.latestVersion, null)
   })
 })

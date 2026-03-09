@@ -1142,6 +1142,14 @@ export function createKeyHandler(ctx) {
       const currentIndex = modeOrder.indexOf(state.mode)
       const nextIndex = (currentIndex + 1) % modeOrder.length
       state.mode = modeOrder[nextIndex]
+      if (!state.config.settings || typeof state.config.settings !== 'object') state.config.settings = {}
+      state.config.settings.preferredToolMode = state.mode
+      if (state.activeProfile && state.config.profiles?.[state.activeProfile]) {
+        const profile = state.config.profiles[state.activeProfile]
+        if (!profile.settings || typeof profile.settings !== 'object') profile.settings = {}
+        profile.settings.preferredToolMode = state.mode
+      }
+      saveConfig(state.config)
       return
     }
 
