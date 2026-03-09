@@ -3,7 +3,7 @@
  * @description Tests covering TUI hotkey behaviour for Task 5.
  *
  * Scope:
- *   1. Shift+G  — usage sort: sortResults('usage') sorts by usagePercent asc/desc
+ *   1. G        — usage sort: sortResults('usage') sorts by usagePercent asc/desc
  *   2. X key    — log page toggle: logVisible state flag semantics
  *   3. = key    — interval increase (reassigned from X): validatees the new binding
  *                  is distinct from X and correctly adjusts pingInterval
@@ -36,9 +36,9 @@ function makeResult(overrides = {}) {
   }
 }
 
-// ─── Suite: Shift+G — usage sort (sortResults 'usage') ───────────────────────
+// ─── Suite: G — usage sort (sortResults 'usage') ─────────────────────────────
 
-describe('tui-hotkeys – Shift+G usage sort', () => {
+describe('tui-hotkeys – G usage sort', () => {
   it('sortResults("usage", "asc") puts lower usagePercent first', () => {
     const results = [
       makeResult({ idx: 1, label: 'A', usagePercent: 80 }),
@@ -98,7 +98,7 @@ describe('tui-hotkeys – Shift+G usage sort', () => {
     let sortColumn = 'avg'
     let sortDirection = 'desc'
 
-    // Press Shift+G: different column → set usage + reset to asc
+    // Press G: different column → set usage + reset to asc
     const col = 'usage'
     if (sortColumn === col) {
       sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
@@ -206,7 +206,7 @@ describe('tui-hotkeys – = key interval increase (reassigned from X)', () => {
     const sortKeys = {
       'r': 'rank', 'y': 'tier', 'o': 'origin', 'm': 'model',
       'l': 'ping', 'a': 'avg', 's': 'swe', 'c': 'ctx',
-      'h': 'condition', 'v': 'verdict', 'b': 'stability', 'u': 'uptime',
+      'h': 'condition', 'v': 'verdict', 'b': 'stability', 'u': 'uptime', 'g': 'usage',
     }
     // X is NOT a sort key
     assert.ok(!('x' in sortKeys), 'x must not be in sort keys')
@@ -218,7 +218,7 @@ describe('tui-hotkeys – = key interval increase (reassigned from X)', () => {
 
   it('= (equals) key is not already bound to sort or filter functions', () => {
     // These are all the sort key bindings; = must not appear among them
-    const allSortKeys = ['r','y','o','m','l','a','s','c','h','v','b','u']
+    const allSortKeys = ['r','y','o','m','l','a','s','c','h','v','b','u','g']
     assert.ok(!allSortKeys.includes('='), '= is not a sort key')
     // These are modal keys that = must not conflict with
     const modalKeys = ['t','n','f','j','i','p','q','z','k','w','x','e','d']

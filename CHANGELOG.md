@@ -4,6 +4,10 @@
 
 ## 0.1.84
 
+### Fixed
+
+- Aligned TUI header shortcut highlights with live bindings: `OrigiN` now highlights `N`, `Up%` uses the correct shortcut color, and `G` now sorts the `UsaGe` column directly.
+
 ### Changed
 
 - Refactored TUI overlays and key handling into `src/overlays.js` and `src/key-handler.js` to keep `bin/free-coding-models.js` lean.

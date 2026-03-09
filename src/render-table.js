@@ -9,6 +9,7 @@
  *
  *   🎯 Key features:
  *   - Full table layout with tier, latency, stability, uptime, and usage columns
+ *   - Hotkey-aware header lettering so highlighted letters always match live sort/filter keys
  *   - Emoji-aware padding via padEndDisplay for aligned verdict/status cells
  *   - Viewport clipping with above/below indicators
  *   - Smart badges (mode, tier filter, origin filter, profile)
@@ -176,11 +177,10 @@ export function renderTable(results, pendingPings, frame, cursor = null, sortCol
   const originH_c  = sortColumn === 'origin'
     ? chalk.bold.cyan(originLabel.padEnd(W_SOURCE))
     : (originFilterMode > 0 ? chalk.bold.rgb(100, 200, 255)(originLabel.padEnd(W_SOURCE)) : (() => {
-      // 📖 Custom colorization for Origin: highlight 'O' (the sort key) at start
-      const first = originLabel[0]
-      const rest = originLabel.slice(1)
-      const padding = ' '.repeat(Math.max(0, W_SOURCE - originLabel.length))
-      return chalk.yellow(first) + chalk.dim(rest + padding)
+      // 📖 Origin uses N because O is already reserved for direct origin sorting.
+      const plain = 'OrigiN'
+      const padding = ' '.repeat(Math.max(0, W_SOURCE - plain.length))
+      return chalk.dim('Origi') + chalk.yellow.bold('N') + chalk.dim(padding)
     })())
   const modelH_c   = colorFirst(modelH, W_MODEL)
   const sweH_c     = sortColumn === 'swe' ? chalk.bold.cyan(sweH.padEnd(W_SWE)) : colorFirst(sweH, W_SWE)
@@ -195,10 +195,15 @@ export function renderTable(results, pendingPings, frame, cursor = null, sortCol
     const padding = ' '.repeat(Math.max(0, W_STAB - plain.length))
     return chalk.dim('Sta') + chalk.yellow.bold('B') + chalk.dim('ility' + padding)
   })()
-  const uptimeH_c  = sortColumn === 'uptime' ? chalk.bold.cyan(uptimeH.padEnd(W_UPTIME)) : colorFirst(uptimeH, W_UPTIME, chalk.green)
-  // 📖 Custom colorization for Usage: highlight 'G' (Shift+G = sort key)
+  // 📖 Up% sorts on U, so keep the highlighted shortcut in the shared yellow sort-key color.
+  const uptimeH_c  = sortColumn === 'uptime' ? chalk.bold.cyan(uptimeH.padEnd(W_UPTIME)) : (() => {
+    const plain = 'Up%'
+    const padding = ' '.repeat(Math.max(0, W_UPTIME - plain.length))
+    return chalk.yellow.bold('U') + chalk.dim('p%' + padding)
+  })()
+  // 📖 Usage sorts on plain G, so the highlighted letter must stay in the visible header.
   const usageH_c   = sortColumn === 'usage' ? chalk.bold.cyan(usageH.padEnd(W_USAGE)) : (() => {
-    const plain = 'Usage'
+    const plain = 'UsaGe'
     const padding = ' '.repeat(Math.max(0, W_USAGE - plain.length))
     return chalk.dim('Usa') + chalk.yellow.bold('G') + chalk.dim('e' + padding)
   })()

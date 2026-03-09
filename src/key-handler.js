@@ -5,7 +5,8 @@
  * @details
  *   This module encapsulates the full onKeyPress switch used by the TUI,
  *   including settings navigation, overlays, profile management, and
- *   OpenCode/OpenClaw launch actions.
+ *   OpenCode/OpenClaw launch actions. It also keeps the live key bindings
+ *   aligned with the highlighted letters shown in the table headers.
  *
  *   → Functions:
  *   - `createKeyHandler` — returns the async keypress handler
@@ -801,13 +802,12 @@ export function createKeyHandler(ctx) {
       return
     }
 
-    // 📖 Sorting keys: R=rank, Y=tier, O=origin, M=model, L=latest ping, A=avg ping, S=SWE-bench, C=context, H=health, V=verdict, B=stability, U=uptime
+    // 📖 Sorting keys: R=rank, Y=tier, O=origin, M=model, L=latest ping, A=avg ping, S=SWE-bench, C=context, H=health, V=verdict, B=stability, U=uptime, G=usage
     // 📖 T is reserved for tier filter cycling — tier sort moved to Y
     // 📖 N is now reserved for origin filter cycling
-    // 📖 G (Shift+G) is handled separately below for usage sort
     const sortKeys = {
       'r': 'rank', 'y': 'tier', 'o': 'origin', 'm': 'model',
-      'l': 'ping', 'a': 'avg', 's': 'swe', 'c': 'ctx', 'h': 'condition', 'v': 'verdict', 'b': 'stability', 'u': 'uptime'
+      'l': 'ping', 'a': 'avg', 's': 'swe', 'c': 'ctx', 'h': 'condition', 'v': 'verdict', 'b': 'stability', 'u': 'uptime', 'g': 'usage'
     }
 
     if (sortKeys[key.name] && !key.ctrl && !key.shift) {
@@ -820,22 +820,6 @@ export function createKeyHandler(ctx) {
         state.sortDirection = 'asc'
       }
       // 📖 Recompute visible sorted list and reset cursor to top to avoid stale index
-      const visible = state.results.filter(r => !r.hidden)
-      state.visibleSorted = sortResultsWithPinnedFavorites(visible, state.sortColumn, state.sortDirection)
-      state.cursor = 0
-      state.scrollOffset = 0
-      return
-    }
-
-    // 📖 Shift+G: sort by usage (quota percent remaining from token-stats.json)
-    if (key.name === 'g' && key.shift && !key.ctrl) {
-      const col = 'usage'
-      if (state.sortColumn === col) {
-        state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc'
-      } else {
-        state.sortColumn = col
-        state.sortDirection = 'asc'
-      }
       const visible = state.results.filter(r => !r.hidden)
       state.visibleSorted = sortResultsWithPinnedFavorites(visible, state.sortColumn, state.sortDirection)
       state.cursor = 0
