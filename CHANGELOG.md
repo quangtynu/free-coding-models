@@ -2,6 +2,19 @@
 
 ---
 
+## 0.2.5
+
+### Fixed
+
+- 🔒 **Improved config save reliability** - API keys are now much safer from corruption and loss:
+  - Automatic backups before each save (keeps last 5 versions in `~/.free-coding-models.backups/`)
+  - Post-write verification confirms file was written correctly and data wasn't lost
+  - Explicit error handling instead of silent failures
+  - Auto-repair on startup if config is corrupted (restores from latest backup)
+  - Console notifications when backup is used or config is repaired
+
+---
+
 ## 0.2.4
 
 ### Fixed
