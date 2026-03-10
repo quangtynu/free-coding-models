@@ -2,6 +2,14 @@
 
 ---
 
+## 0.2.3
+
+### Fixed
+
+- 🔧 Fixed Codestral API endpoint URL from `codestral.mistral.ai/v1` to `api.mistral.ai/v1` to align with Mistral AI's unified API platform. This resolves authentication failures when testing Codestral API keys in Settings.
+
+---
+
 ## 0.2.2
 
 ### Added
