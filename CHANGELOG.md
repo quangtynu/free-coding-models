@@ -2,6 +2,13 @@
 
 ---
 
+## 0.2.14
+
+### Fixed
+- **Changelog scrolling viewport**: Scrolling in changelog details (N key) now respects viewport boundaries — content no longer scrolls beyond visible area. Down/PageDown/End keys now properly clamp to max scroll offset so you can view all content without it disappearing off screen.
+
+---
+
 ## 0.2.13
 
 ### Added
