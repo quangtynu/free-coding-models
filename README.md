@@ -200,6 +200,30 @@ free-coding-models
 # Explicitly target OpenCode CLI (TUI + Enter launches OpenCode CLI)
 free-coding-models --opencode
 
+## 📋 CLI Flags (expanded)
+
+The tool now supports a comprehensive set of flags to fine‑tune its behavior. All flags can be combined in any order.
+
+| Flag | Type | Description |
+|------|------|-------------|
+| `--best` | boolean | Show only top‑tier models (A+, S, S+). |
+| `--fiable` | boolean | Run a 10 s reliability analysis and output the most reliable model. |
+| `--json` | boolean | Output results as JSON for scripting/automation. |
+| `--tier <S|A|B|C>` | value | Filter models by tier family (e.g. `S` shows S+ and S). |
+| `--recommend` | boolean | Open Smart Recommend mode immediately on startup. |
+| `--sort <column>` | value | Sort by a specific column (`rank`, `tier`, `origin`, `model`, `ping`, `avg`, `swe`, `ctx`, `condition`, `verdict`, `uptime`, `stability`, `usage`). |
+| `--desc` / `--asc` | boolean | Set sort direction explicitly (descending or ascending). |
+| `--origin <provider>` | value | Filter models by provider origin (e.g. `nvidia`, `groq`). |
+| `--ping-interval <ms>` | value | Override the ping interval in milliseconds (affects live monitoring speed). |
+| `--hide-unconfigured` | boolean | Hide models whose providers have no configured API key. |
+| `--show-unconfigured` | boolean | Show all models regardless of API key configuration. |
+| `--disable-widths-warning` | boolean | Disable the terminal width warning banner. |
+| `--profile <name>` | value | Load a saved configuration profile before startup. |
+| `--no-telemetry` | boolean | Disable anonymous telemetry for this run. |
+| `--clean-proxy`, `--proxy-clean` | boolean | Remove persisted FCM proxy configuration from OpenCode. |
+| `--help`, `-h` | boolean | Print the complete help text and exit. |
+
+These flags are also reflected in the built‑in help (`free-coding-models --help`).
 # Explicitly target OpenCode Desktop (TUI + Enter sets model & opens Desktop app)
 free-coding-models --opencode-desktop
 
@@ -919,6 +943,23 @@ This script:
 ---
 
 ## 📋 API Reference
+
+### 🎁 Premium Flag
+
+The `--premium` flag provides a quick view of only the elite **S‑tier** models, sorted by their **verdict** (which combines latency, stability and uptime). This is useful when you want to focus exclusively on the highest‑quality, most reliable models.
+
+```bash
+free-coding-models --premium
+```
+
+What it does under the hood:
+- Sets `tierFilter` to `S` (showing only S+ and S tier models).
+- Forces the sort column to `verdict` with ascending order, so the best‑rated models appear at the top.
+- Leaves other settings untouched, so you can still combine it with flags like `--json` for scripting.
+
+You can combine `--premium` with other flags (e.g., `--json --hide-unconfigured`) to further tailor the output.
+
+---
 
 **Environment variables (override config file):**
 

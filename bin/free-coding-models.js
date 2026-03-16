@@ -203,6 +203,15 @@ async function main() {
     // 📖 User declined auto-fix or it failed — continue anyway, just warned
   }
 
+  // 📖 Apply CLI overrides for settings
+  if (cliArgs.sortColumn) config.settings.sortColumn = cliArgs.sortColumn
+  if (cliArgs.sortDirection) config.settings.sortAsc = cliArgs.sortDirection === 'asc'
+  if (cliArgs.originFilter) config.settings.originFilter = cliArgs.originFilter
+  if (cliArgs.pingInterval) config.settings.pingInterval = cliArgs.pingInterval
+  if (cliArgs.hideUnconfigured) config.settings.hideUnconfiguredModels = true
+  if (cliArgs.showUnconfigured) config.settings.hideUnconfiguredModels = false
+  if (cliArgs.disableWidthsWarning) config.settings.disableWidthsWarning = true
+
   if (cliArgs.cleanProxyMode) {
     const cleaned = cleanupOpenCodeProxyConfig()
     console.log()

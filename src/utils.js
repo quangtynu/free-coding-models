@@ -414,10 +414,29 @@ export function parseArgs(argv) {
     ? profileIdx + 1
     : -1
 
+  // New value flags
+  const sortIdx = args.findIndex(a => a.toLowerCase() === '--sort')
+  const sortValueIdx = (sortIdx !== -1 && args[sortIdx + 1] && !args[sortIdx + 1].startsWith('--'))
+    ? sortIdx + 1
+    : -1
+
+  const originIdx = args.findIndex(a => a.toLowerCase() === '--origin')
+  const originValueIdx = (originIdx !== -1 && args[originIdx + 1] && !args[originIdx + 1].startsWith('--'))
+    ? originIdx + 1
+    : -1
+
+  const pingIntervalIdx = args.findIndex(a => a.toLowerCase() === '--ping-interval')
+  const pingIntervalValueIdx = (pingIntervalIdx !== -1 && args[pingIntervalIdx + 1] && !args[pingIntervalIdx + 1].startsWith('--'))
+    ? pingIntervalIdx + 1
+    : -1
+
   // 📖 Set of arg indices that are values for flags (not API keys)
   const skipIndices = new Set()
   if (tierValueIdx !== -1) skipIndices.add(tierValueIdx)
   if (profileValueIdx !== -1) skipIndices.add(profileValueIdx)
+  if (sortValueIdx !== -1) skipIndices.add(sortValueIdx)
+  if (originValueIdx !== -1) skipIndices.add(originValueIdx)
+  if (pingIntervalValueIdx !== -1) skipIndices.add(pingIntervalValueIdx)
 
   for (const [i, arg] of args.entries()) {
     if (arg.startsWith('--') || arg === '-h') {
@@ -448,8 +467,20 @@ export function parseArgs(argv) {
   const cleanProxyMode = flags.includes('--clean-proxy') || flags.includes('--proxy-clean')
   const jsonMode = flags.includes('--json')
   const helpMode = flags.includes('--help') || flags.includes('-h')
+  const premiumMode = flags.includes('--premium')
+
+  // New boolean flags
+  const sortDesc = flags.includes('--desc')
+  const sortAscFlag = flags.includes('--asc')
+  const hideUnconfigured = flags.includes('--hide-unconfigured')
+  const showUnconfigured = flags.includes('--show-unconfigured')
+  const disableWidthsWarning = flags.includes('--disable-widths-warning')
 
   let tierFilter = tierValueIdx !== -1 ? args[tierValueIdx].toUpperCase() : null
+  let sortColumn = sortValueIdx !== -1 ? args[sortValueIdx].toLowerCase() : null
+  let originFilter = originValueIdx !== -1 ? args[originValueIdx] : null
+  let pingInterval = pingIntervalValueIdx !== -1 ? parseInt(args[pingIntervalValueIdx], 10) : null
+  let sortDirection = sortDesc ? 'desc' : (sortAscFlag ? 'asc' : null)
 
   const profileName = profileValueIdx !== -1 ? args[profileValueIdx] : null
 
@@ -478,6 +509,14 @@ export function parseArgs(argv) {
     jsonMode,
     helpMode,
     tierFilter,
+    sortColumn,
+    sortDirection,
+    originFilter,
+    pingInterval,
+    hideUnconfigured,
+    showUnconfigured,
+    disableWidthsWarning,
+    premiumMode,
     profileName,
     recommendMode
   }
