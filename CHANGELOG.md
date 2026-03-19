@@ -4,6 +4,9 @@
 ## [0.3.24] - 2026-03-19
 
 ### Added
+- **Unique emoji per tool** — Every CLI tool now has a dedicated emoji shown in the Compatible column, Z-cycle badge, command palette, help overlay, and README (📦 OpenCode, 🦞 OpenClaw, 💘 Crush, 🪿 Goose, π Pi, 🛠 Aider, 🐉 Qwen, 🤲 OpenHands, ⚡ Amp, 🦘 Rovo, ♊ Gemini)
+- **Merged compat column** — OpenCode CLI and Desktop share 📦 in a single slot (11 slots instead of 12 separate initials)
+- **COMPAT_COLUMN_SLOTS** — New export in tool-metadata.js for merged compatible-column rendering
 - **Width warning now always shows** - Terminal width warning displays every time terminal is resized below 80 columns (previously limited to 2 shows per session)
 - **Gemini CLI integration** - New CLI-only tool provider with 3 models (Gemini 3 Pro 🆕, Gemini 2.5 Pro, Gemini 2.5 Flash)
 - **Rovo Dev CLI integration** - New CLI-only tool provider with Claude Sonnet 4 🆕
@@ -13,15 +16,17 @@
 - **New CLI flags** - Added `--rovo` and `--gemini` launch options
 - **"🆕" badges** - Mark newly added models in the table (Claude Sonnet 4, Gemini 3 Pro)
 - **OpenCode Zen free models** - 5 new free models (Big Pickle, GPT 5 Nano, MiMo V2 Flash Free, MiniMax M2.5 Free, Nemotron 3 Super Free) exclusive to OpenCode CLI/Desktop via `opencode-zen` provider
-- **"Compatible with" column** - New TUI column showing colored single-letter initials (O, D, C, R, G, P, A, Q, H, M, V, I) for each tool a model supports; incompatible tools show a dim `·` dot
-- **Tool color system** - Each of the 12 supported tools now has a unique RGB color used in the Z-cycle badge and compatibility column
+- **"Compatible with" column** - New TUI column showing colored emojis for each tool a model supports; incompatible tools show dim spaces
+- **Tool color system** - Each of the 12 supported tools now has a unique RGB color and emoji used in the Z-cycle badge and compatibility column
 - **Incompatible model highlighting** - When a tool mode is active (via Z), models that can't run with that tool get a dark red background for instant visibility — they stay in their normal sorted position (not pushed to the bottom)
 - **Tool compatibility functions** - `getCompatibleTools()` and `isModelCompatibleWithTool()` in tool-metadata.js for programmatic compatibility checks
+- **Incompatible model fallback overlay** - When pressing Enter on a model that can't run on the active tool (red-highlighted row), an in-TUI overlay appears with two options: (1) switch to a compatible tool, or (2) pick a similar model by SWE score that works with the current tool
+- **findSimilarCompatibleModels()** - New function in tool-metadata.js that finds models with closest SWE scores compatible with the active tool
 - **Updated provider/model counts** - Now 23 providers with 171 models (was 20/160)
 
 ### Changed
 - **Z key cycle** - Rovo and Gemini added to tool mode cycle (last in order)
-- **Tool metadata** - Added `cliOnly` flag for CLI-only tools, `initial` and `color` properties for all 12 tools
+- **Tool metadata** - Removed `initial` field (replaced by emojis), added `cliOnly` flag for CLI-only tools, `emoji` and `color` properties for all 12 tools
 - **Provider metadata** - Added Rovo, Gemini, and OpenCode Zen provider information
 - **Responsive column hiding** - Compatible column hides first (before Rank) on narrow terminals
 - **Key handler** - Zen models auto-switch to OpenCode CLI on launch; API key warnings skip Zen models

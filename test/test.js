@@ -54,7 +54,7 @@ import {
   resolveLauncherModelId,
 } from '../src/tool-launchers.js'
 import { getToolInstallPlan, isToolInstalled, resolveToolBinaryPath } from '../src/tool-bootstrap.js'
-import { TOOL_METADATA, TOOL_MODE_ORDER, getCompatibleTools, isModelCompatibleWithTool } from '../src/tool-metadata.js'
+import { TOOL_METADATA, TOOL_MODE_ORDER, getCompatibleTools, isModelCompatibleWithTool, findSimilarCompatibleModels } from '../src/tool-metadata.js'
 import { sortResultsWithPinnedFavorites } from '../src/render-helpers.js'
 import { startOpenClaw } from '../src/openclaw.js'
 import { getConfiguredInstallableProviders, getInstallTargetModes, installProviderEndpoints } from '../src/endpoint-installer.js'
@@ -2190,6 +2190,66 @@ describe('tool compatibility matrix', () => {
     assert.ok(sources['opencode-zen'], 'opencode-zen source must exist')
     assert.ok(sources['opencode-zen'].zenOnly, 'opencode-zen must have zenOnly: true')
     assert.ok(sources['opencode-zen'].models.length > 0, 'opencode-zen must have models')
+  })
+
+  // 📖 findSimilarCompatibleModels tests
+  it('findSimilarCompatibleModels returns models sorted by SWE delta', () => {
+    const mockResults = [
+      { modelId: 'a', label: 'Model A', tier: 'S+', sweScore: '72.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'b', label: 'Model B', tier: 'S', sweScore: '65.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'c', label: 'Model C', tier: 'A+', sweScore: '80.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'd', label: 'Model D', tier: 'A', sweScore: '50.0%', providerKey: 'nvidia', hidden: false },
+    ]
+    const result = findSimilarCompatibleModels('70.0%', 'opencode', mockResults, 3)
+    assert.equal(result.length, 3)
+    // 📖 Closest to 70.0% should be 72.0% (delta 2), then 65.0% (delta 5), then 80.0% (delta 10)
+    assert.equal(result[0].sweScore, '72.0%')
+    assert.equal(result[1].sweScore, '65.0%')
+    assert.equal(result[2].sweScore, '80.0%')
+  })
+
+  it('findSimilarCompatibleModels excludes incompatible models', () => {
+    const mockResults = [
+      { modelId: 'a', label: 'Regular', tier: 'S', sweScore: '70.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'b', label: 'Rovo Only', tier: 'S', sweScore: '71.0%', providerKey: 'rovo', hidden: false },
+    ]
+    // 📖 When looking for models compatible with 'opencode', rovo models should be excluded
+    const result = findSimilarCompatibleModels('70.0%', 'opencode', mockResults, 3)
+    assert.equal(result.length, 1)
+    assert.equal(result[0].label, 'Regular')
+  })
+
+  it('findSimilarCompatibleModels excludes hidden models', () => {
+    const mockResults = [
+      { modelId: 'a', label: 'Visible', tier: 'S', sweScore: '70.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'b', label: 'Hidden', tier: 'S', sweScore: '71.0%', providerKey: 'nvidia', hidden: true },
+    ]
+    const result = findSimilarCompatibleModels('70.0%', 'opencode', mockResults, 3)
+    assert.equal(result.length, 1)
+    assert.equal(result[0].label, 'Visible')
+  })
+
+  it('findSimilarCompatibleModels respects maxResults limit', () => {
+    const mockResults = [
+      { modelId: 'a', label: 'A', tier: 'S', sweScore: '70.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'b', label: 'B', tier: 'S', sweScore: '71.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'c', label: 'C', tier: 'S', sweScore: '72.0%', providerKey: 'nvidia', hidden: false },
+      { modelId: 'd', label: 'D', tier: 'S', sweScore: '73.0%', providerKey: 'nvidia', hidden: false },
+    ]
+    const result = findSimilarCompatibleModels('70.0%', 'opencode', mockResults, 2)
+    assert.equal(result.length, 2)
+  })
+
+  it('findSimilarCompatibleModels handles missing SWE scores gracefully', () => {
+    const mockResults = [
+      { modelId: 'a', label: 'No SWE', tier: 'S', sweScore: '-', providerKey: 'nvidia', hidden: false },
+      { modelId: 'b', label: 'Has SWE', tier: 'S', sweScore: '70.0%', providerKey: 'nvidia', hidden: false },
+    ]
+    // 📖 When selected model has no SWE score, treat as 0 — should still return results
+    const result = findSimilarCompatibleModels('-', 'opencode', mockResults, 3)
+    assert.equal(result.length, 2)
+    // 📖 '-' parses as 0, so the model with sweScore '-' (also 0) should be closest
+    assert.equal(result[0].label, 'No SWE')
   })
 })
 

@@ -10,7 +10,7 @@
 
 <p align="center">
   <strong>Find the fastest free coding model in seconds</strong><br>
-  <sub>Ping 174 models across 23 AI Free providers in real-time </sub><br><sub> Install Free API endpoints to your favorite AI coding tool: <br>OpenCode, OpenClaw, Crush, Goose, Aider, Qwen Code, OpenHands, Amp or Pi in one keystroke</sub>
+  <sub>Ping 174 models across 23 AI Free providers in real-time </sub><br><sub> Install Free API endpoints to your favorite AI coding tool: <br>📦 OpenCode, 🦞 OpenClaw, 💘 Crush, 🪿 Goose, 🛠 Aider, 🐉 Qwen Code, 🤲 OpenHands, ⚡ Amp, π Pi, 🦘 Rovo or ♊ Gemini in one keystroke</sub>
 </p>
 
 
@@ -85,8 +85,8 @@ Create a free account on one provider below to get started:
 | [Cloudflare Workers AI](https://dash.cloudflare.com) | 6 | S → B | Free: 10k neurons/day, text-gen 300 RPM | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` |
 | [Perplexity API](https://www.perplexity.ai/settings/api) | 4 | A+ → B | Tiered limits by spend (default ~50 RPM) | `PERPLEXITY_API_KEY` |
 | [Replicate](https://replicate.com/account/api-tokens) | 1 | A- | 6 req/min (no payment) – up to 3,000 RPM with payment | `REPLICATE_API_TOKEN` |
-| [Rovo Dev CLI](https://www.atlassian.com/rovo) | 1 | S+ | 5M tokens/day (beta) | CLI tool 🔧 |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | 3 | S+ → A+ | 1,000 req/day | CLI tool 🌙 |
+| [Rovo Dev CLI](https://www.atlassian.com/rovo) | 1 | S+ | 5M tokens/day (beta) | CLI tool 🦘 |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | 3 | S+ → A+ | 1,000 req/day | CLI tool ♊ |
 | [OpenCode Zen](https://opencode.ai/zen) | 8 | S+ → A+ | Free with OpenCode account | Zen models ✨ |
 
 > 💡 One key is enough. Add more at any time with **`P`** inside the TUI.
@@ -124,7 +124,7 @@ Need to fix contrast because your terminal theme is fighting the TUI? Press **`G
 ↑↓ navigate   →   Enter to launch
 ```
 
-The model you select is automatically written into your tool's config (OpenCode, OpenClaw, Crush, etc.) and the tool opens immediately. Done.
+The model you select is automatically written into your tool's config (📦 OpenCode, 🦞 OpenClaw, 💘 Crush, etc.) and the tool opens immediately. Done.
 
 If the active CLI tool is missing, FCM now catches it before launch, offers a tiny Yes/No install prompt, installs the tool with its official global command, then resumes the same model launch automatically.
 
@@ -160,24 +160,24 @@ free-coding-models --openclaw --origin groq
 
 | Flag | Launches |
 |------|----------|
-| `--opencode` | OpenCode CLI |
-| `--opencode-desktop` | OpenCode Desktop |
-| `--openclaw` | OpenClaw |
-| `--crush` | Crush |
-| `--goose` | Goose |
-| `--aider` | Aider |
-| `--qwen` | Qwen Code |
-| `--openhands` | OpenHands |
-| `--amp` | Amp |
-| `--pi` | Pi |
-| `--rovo` | Rovo Dev CLI |
-| `--gemini` | Gemini CLI |
+| `--opencode` | 📦 OpenCode CLI |
+| `--opencode-desktop` | 📦 OpenCode Desktop |
+| `--openclaw` | 🦞 OpenClaw |
+| `--crush` | 💘 Crush |
+| `--goose` | 🪿 Goose |
+| `--aider` | 🛠 Aider |
+| `--qwen` | 🐉 Qwen Code |
+| `--openhands` | 🤲 OpenHands |
+| `--amp` | ⚡ Amp |
+| `--pi` | π Pi |
+| `--rovo` | 🦘 Rovo Dev CLI |
+| `--gemini` | ♊ Gemini CLI |
 
 Press **`Z`** in the TUI to cycle between tools without restarting.
 
 ### CLI-Only Tools
 
-**Rovo Dev CLI** 🔧
+**🦘 Rovo Dev CLI**
 - Provider: [Atlassian Rovo](https://www.atlassian.com/rovo)
 - Install: [Installation Guide](https://support.atlassian.com/rovo/docs/install-and-run-rovo-dev-cli-on-your-device/)
 - Free tier: 5M tokens/day (beta, requires Atlassian account)
@@ -185,7 +185,7 @@ Press **`Z`** in the TUI to cycle between tools without restarting.
 - Launch: `free-coding-models --rovo` or press `Z` until Rovo mode
 - Features: Jira/Confluence integration, MCP server support
 
-**Gemini CLI** 🌙
+**♊ Gemini CLI**
 - Provider: [Google Gemini](https://github.com/google-gemini/gemini-cli)
 - Install: `npm install -g @google/gemini-cli`
 - Free tier: 1,000 requests/day (personal Google account, no credit card)
@@ -214,14 +214,14 @@ To use Zen models: sign up at [opencode.ai/auth](https://opencode.ai/auth) and e
 
 ### Tool Compatibility
 
-The TUI shows a **"Compatible with"** column displaying colored single-letter initials for each supported tool. When a tool mode is active (via `Z`), models incompatible with that tool are highlighted with a dark red background so you can instantly see which models work with your current tool.
+The TUI shows a **"Compatible with"** column displaying colored emojis for each supported tool. When a tool mode is active (via `Z`), models incompatible with that tool are highlighted with a dark red background so you can instantly see which models work with your current tool.
 
 | Model Type | Compatible Tools |
 |------------|-----------------|
-| Regular (NVIDIA, Groq, etc.) | All tools except Rovo and Gemini |
-| Rovo | Rovo Dev CLI only |
-| Gemini | Gemini CLI only |
-| OpenCode Zen | OpenCode CLI and OpenCode Desktop only |
+| Regular (NVIDIA, Groq, etc.) | All tools except 🦘 Rovo and ♊ Gemini |
+| Rovo | 🦘 Rovo Dev CLI only |
+| Gemini | ♊ Gemini CLI only |
+| OpenCode Zen | 📦 OpenCode CLI and 📦 OpenCode Desktop only |
 
 → **[Full flags reference](./docs/flags.md)**
 
@@ -268,7 +268,7 @@ The TUI shows a **"Compatible with"** column displaying colored single-letter in
 - **⚡️ Command Palette** — `Ctrl+P` opens a searchable action launcher for filters, sorting, overlays, and quick toggles
 - **Install Endpoints** — push a full provider catalog into any tool's config (from Settings `P` or ⚡️ Command Palette)
 - **Missing tool bootstrap** — detect absent CLIs, offer one-click install, then continue the selected launch automatically
-- **Tool compatibility matrix** — colored initials show which tools each model supports; incompatible rows highlighted in dark red when a tool mode is active
+- **Tool compatibility matrix** — colored emojis show which tools each model supports; incompatible rows highlighted in dark red when a tool mode is active
 - **OpenCode Zen models** — 8 free models exclusive to OpenCode CLI/Desktop, powered by the Zen AI gateway
 - **Width guardrail** — shows a warning instead of a broken table in narrow terminals
 - **Readable everywhere** — semantic theme palette keeps table rows, overlays, badges, and help screens legible in dark and light terminals
